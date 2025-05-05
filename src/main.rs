@@ -1,3 +1,6 @@
+use colored::Colorize;
+use custom_logger as log;
+use std::str::FromStr;
 use std::sync::Arc;
 
 use crate::{
@@ -22,14 +25,24 @@ const DEFAULT_CONFIG_PATH: &str = "./config.toml";
 async fn main() -> Result<()> {
     // load config
     let config = Config::load(DEFAULT_CONFIG_PATH).await?;
+    let res_log_level = log::LevelFilter::from_str(&config.log_level);
+
+    // setup logging
+    log::Logging::new()
+        .with_level(res_log_level.unwrap())
+        .init()
+        .expect("should initialize");
 
     // create openai client
     let api_key = config
         .openai_key
         .clone()
         .unwrap_or_else(|| std::env::var("OPENAI_API_KEY").expect("need set api key"));
+
     let url = config.chat_url.clone();
-    println!("url is {:?}", url);
+    let model = config.model_name.clone();
+    log::info!("url   : {:?}", url.as_ref().unwrap());
+    log::info!("model : {:?}", model.unwrap());
     let openai_client = Arc::new(OpenAIClient::new(api_key, url, config.proxy));
 
     // create tool set
@@ -40,24 +53,32 @@ async fn main() -> Result<()> {
         let mcp_clients = config.create_mcp_clients().await?;
 
         for (name, client) in mcp_clients {
-            println!("loading mcp tools: {}", name);
+            log::info!(
+                "{}",
+                format!("loading mcp tools: {}", name).bright_blue().bold()
+            );
             let server = client.peer().clone();
             let tools = get_mcp_tools(server).await?;
 
             for tool in tools {
-                println!(
-                    "adding tool: {} : description {} : parameters {}",
-                    tool.name(),
-                    tool.description(),
-                    tool.parameters(),
-                );
+                let t = format!("  tool: {:<14} : ", tool.name())
+                    .bright_white()
+                    .bold();
+                let description = format!("description: {}", tool.description())
+                    .bright_magenta()
+                    .bold();
+                let parameters =
+                    format!("{:<22} :  paramaters : {}", "", tool.parameters()).magenta();
+                log::info!("{} {}", t, description);
+                log::debug!("{}", parameters);
                 tool_set.add_tool(tool);
             }
         }
-        println!(
-            "\nTo use a tool use the following format: Tool: <name> Inputs: <args> (both fields are mandatory)"
+        println!("");
+        log::info!(
+            "To use a tool use the following format: Tool: <name> Inputs: <args> (both fields are mandatory)"
         );
-        println!("If there are no args keep Inputs: (with no args)\n");
+        log::info!("If there are no args keep Inputs: (with no args)\n");
     }
 
     // create chat session

@@ -1,3 +1,4 @@
+use custom_logger as log;
 use std::{
     io::{self, Write},
     sync::Arc,
@@ -11,6 +12,7 @@ use crate::{
     tool::{Tool as ToolTrait, ToolSet},
 };
 
+#[allow(unused)]
 pub struct ChatSession {
     client: Arc<dyn ChatClient>,
     tool_set: ToolSet,
@@ -37,7 +39,13 @@ impl ChatSession {
     }
 
     pub async fn chat(&mut self) -> Result<()> {
-        println!("welcome to use simple chat client, use 'exit' to quit");
+        log::info!("welcome!! Use 'exit' to quit");
+
+        let mut prompt = "A chat between a curious human and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the human's questions.
+### Human: Hello, Assistant.
+### Assistant: Hello. How may I help you today?
+### Human: Please tell me the largest city in Europe.
+### Assistant: Sure. The largest city in Europe is Moscow, the capital of Russia.".to_owned();
 
         loop {
             print!("> ");
@@ -97,7 +105,7 @@ impl ChatSession {
                 //);
                 //let tool_name = tool_names[idx].clone();
 
-                println!("calling tool:{}:", tool_name);
+                log::info!("calling tool:{}:", tool_name);
                 if let Some(tool) = self.tool_set.get_tool(&tool_name) {
                     // simple handle args
                     let args_str = args_text.join(" ");
@@ -112,39 +120,38 @@ impl ChatSession {
                     // call tool
                     match tool.call(args).await {
                         Ok(result) => {
-                            println!("tool result: {}", result);
-
-                            // add tool result to dialog
-                            //self.messages.push(Message::user(result));
+                            log::info!("tool result: {}", result);
                         }
                         Err(e) => {
-                            println!("tool call failed: {}", e);
-                            //self.messages
-                            //    .push(Message::user(format!("tool call failed: {}", e)));
+                            log::error!("tool call failed: {}", e);
                         }
                     }
                 } else {
-                    println!("tool not found: {}", tool_name);
+                    log::warn!("tool not found: {}", tool_name);
                 }
             } else {
                 self.messages.push(Message::user(&input));
 
                 // create request
+                let end_prompt = format!("\n### Human: {}\n### Assistant:", input);
+                prompt.push_str(&end_prompt);
                 let request = CompletionRequest {
-                    model: self.model.clone(),
-                    messages: self.messages.clone(),
+                    //model: self.model.clone(),
+                    //messages: self.messages.clone(),
+                    prompt: prompt.clone(),
+                    top_k: 40,
+                    top_p: 0.9,
+                    n_keep: 28,
+                    n_predict: 256,
+                    cache_prompt: true,
+                    stop: vec!["\n".to_string(), "### Human:".to_string()],
                     temperature: Some(0.7),
                     tools: None,
+                    stream: true,
                 };
 
-                println!("I'm thinking ...");
-
                 // send request
-                let response = self.client.complete(request).await?;
-                if let Some(choice) = response.choices.first() {
-                    println!("AI: {}", choice.message.content);
-                    self.messages.push(choice.message.clone());
-                }
+                let _response = self.client.complete(request).await?;
             }
         }
 

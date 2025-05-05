@@ -32,12 +32,20 @@ impl Message {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CompletionRequest {
-    pub model: String,
-    pub messages: Vec<Message>,
+    //pub model: String,
+    //pub messages: Vec<Message>,
+    pub prompt: String,
+    pub top_k: usize,
+    pub top_p: f32,
+    pub n_keep: usize,
+    pub n_predict: usize,
+    pub cache_prompt: bool,
+    pub stop: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub temperature: Option<f32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tools: Option<Vec<Tool>>,
+    pub stream: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -45,6 +53,19 @@ pub struct Tool {
     pub name: String,
     pub description: String,
     pub parameters: serde_json::Value,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct SimpleCompletionResponse {
+    pub data: DataResponse,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DataResponse {
+    //pub index: String,
+    pub content: String,
+    //pub tokens: Vec<usize>,
+    //pub stop: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

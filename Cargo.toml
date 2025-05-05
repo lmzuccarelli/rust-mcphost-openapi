@@ -18,6 +18,9 @@ tokio = { version = "1.44.2", features = ["full"] }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 reqwest = "0.12.15"
+futures-util = "0.3.31"
+custom-logger = { git = "https://github.com/lmzuccarelli/rust-custom-logger", branch = "main", version = "0.2.0" }
+colored = "3.0.0"
 
 [profile.release]
 strip = true # Strip symbols from the binary

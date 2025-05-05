@@ -1,7 +1,6 @@
 use std::{collections::HashMap, path::Path, process::Stdio};
 
 use anyhow::Result;
-//use futures::StreamExt;
 use rmcp::{RoleClient, ServiceExt, service::RunningService};
 use serde::{Deserialize, Serialize};
 
@@ -12,6 +11,7 @@ pub struct Config {
     pub mcp: Option<McpConfig>,
     pub model_name: Option<String>,
     pub proxy: Option<bool>,
+    pub log_level: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

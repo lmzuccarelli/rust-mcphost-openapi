@@ -1,0 +1,29 @@
+
+endpointi :  /tools
+
+json      : { 
+              "name" : "document-indexing",
+              "functions": [{
+                "name" : "index_search",
+                "description": "Search for a document from s3 bucket",
+                "parameters": [
+                  { "category": "string" },
+                  { "item": "string" }
+                ]
+              },{
+                "name" : "index_upload",
+                "description": "Index a document and upload it to a s3 bucket",
+                "parameters": [
+                  { "path" : "string", "required": true },
+                  { "category": "string" },
+                  { "item": "string" }
+                ]
+              },{
+                "name" : "index_download",
+                "description": "Download a document from a s3 bucket",
+                "parameters": [
+                  { "object" : "string", "required": true }
+                ]
+              }]
+            }
+
